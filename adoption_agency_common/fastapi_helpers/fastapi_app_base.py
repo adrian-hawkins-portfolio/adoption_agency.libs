@@ -3,8 +3,8 @@ from typing import Annotated
 import uvicorn
 from fastapi import FastAPI
 
-from petstore_common.fastapi_helpers.lifecycles import boa_lifespan
-from petstore_common.fastapi_helpers.middleware.request_guid_middleware import request_guid_middleware
+from adoption_agency_common.fastapi_helpers.lifecycles import boa_lifespan
+from adoption_agency_common.fastapi_helpers.middleware.request_guid_middleware import request_guid_middleware
 
 
 class BOAFastApi(FastAPI):

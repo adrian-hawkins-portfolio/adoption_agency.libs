@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from petstore_common.util.correlation_guid import correlation_guid
+from adoption_agency_common.util.correlation_guid import correlation_guid
 
 
 class RequestIdFilter(logging.Filter):

@@ -1,2 +1,0 @@
-from petstore_common.database.base_model import BaseModel
-from petstore_common.database.db_connection import session_local, async_engine, _startup_db

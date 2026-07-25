@@ -1,2 +1,0 @@
-from petstore_common.fastapi_helpers.lifecycles.boa_lifecycle import boa_lifespan
-from petstore_common.fastapi_helpers.lifecycles.database_lifecycle import database_lifecycle

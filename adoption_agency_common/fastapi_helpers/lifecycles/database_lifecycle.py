@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
-from petstore_common.util import logger
-from petstore_common.database import _startup_db
+from adoption_agency_common.util import logger
+from adoption_agency_common.database import _startup_db
 
 
 @asynccontextmanager

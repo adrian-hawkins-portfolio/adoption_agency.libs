@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager, AsyncExitStack
 
-# from petstore_common import BOAFastApi
-from petstore_common.fastapi_helpers.lifecycles.database_lifecycle import database_lifecycle
+# from adoption_agency_common import BOAFastApi
+from adoption_agency_common.fastapi_helpers.lifecycles.database_lifecycle import database_lifecycle
 
 
 class FastApi:

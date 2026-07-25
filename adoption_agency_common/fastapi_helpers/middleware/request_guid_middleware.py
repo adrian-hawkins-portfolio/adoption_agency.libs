@@ -2,7 +2,7 @@ from fastapi import Request
 
 import uuid
 
-from petstore_common.util import logger, correlation_guid
+from adoption_agency_common.util import logger, correlation_guid
 
 
 async def request_guid_middleware(request: Request, call_next):
