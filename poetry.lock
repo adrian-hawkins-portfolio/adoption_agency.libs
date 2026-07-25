@@ -273,7 +273,10 @@ files = [
 detect-installer = ">=0.1.0"
 fastar = ">=0.10.0"
 httpx = ">=0.27.0"
-pydantic = {version = ">=2.12.0", extras = ["email"], markers = "python_version >= \"3.14\""}
+pydantic = [
+    {version = ">=2.8.0", extras = ["email"], markers = "python_version == \"3.13\""},
+    {version = ">=2.12.0", extras = ["email"], markers = "python_version >= \"3.14\""},
+]
 rich-toolkit = ">=0.20.3"
 rignore = ">=0.5.1"
 sentry-sdk = ">=2.20.0"
@@ -1914,5 +1917,5 @@ files = [
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.14"
-content-hash = "095a0c7096b66f76c98b0351562d6277e2948070a4591c49f887df076e075b87"
+python-versions = ">=3.13"
+content-hash = "78d8c4c16a0552afbd510fb5f0885dd509ff1bab0e1119f69f068853fbd4487c"
