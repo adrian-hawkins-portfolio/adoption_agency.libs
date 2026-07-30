@@ -1,20 +1,20 @@
 from contextlib import asynccontextmanager, AsyncExitStack
 
-# from adoption_agency_common import BOAFastApi
+from fastapi import FastAPI
 from adoption_agency_common.fastapi_helpers.lifecycles.database_lifecycle import database_lifecycle
+from adoption_agency_common.fastapi_helpers.lifecycles.endpoint_lifecycle import endpoint_lifespan
+from adoption_agency_common.fastapi_helpers.lifecycles.node_lifecycle import node_lifespan
 from adoption_agency_common.util import logger
 
-class FastApi:
-    pass
 
 
 @asynccontextmanager
-async def boa_lifespan(app: FastApi):
-    lifecycles = []
+async def boa_lifespan(app: FastAPI):
+    lifecycles = [database_lifecycle, node_lifespan]
     logger.debug("Starting app...")
     async with AsyncExitStack() as stack:
         for lifecycle in lifecycles:
-            await stack.enter_async_context(lifecycle())
+            await stack.enter_async_context(lifecycle(app))
         yield
     # print("Starting application...")
     #

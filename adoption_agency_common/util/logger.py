@@ -3,6 +3,7 @@ import sys
 
 from adoption_agency_common.util.correlation_guid import correlation_guid
 
+logging.getLogger("pika").setLevel(logging.WARNING)
 
 class RequestIdFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
