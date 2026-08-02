@@ -4,8 +4,10 @@ from typing import List
 
 import aio_pika
 
+from adoption_agency_common.saga_manager.base_saga import pending_futures
 from adoption_agency_common.saga_manager.rabbit_broker import RabbitMQClient
-from adoption_agency_common.util import correlation_guid
+from adoption_agency_common.util import correlation_guid, consts
+from adoption_agency_common.util.consts import service_callback_queue
 
 message_handlers = {}
 
@@ -30,6 +32,12 @@ class SagaNode:
     async def process_message(self, message: aio_pika.IncomingMessage) -> None:
         # await asyncio.sleep(1)
         print(message.routing_key)
+        if message.routing_key == consts.service_callback_queue:
+            guid = json.loads(message.body.decode())["headers"]["guid"]
+            fut = pending_futures.get(guid)
+            if fut:
+                fut.set_result(json.loads(message.body.decode())["payload"])
+            return
         msg_raw = json.loads(message.body.decode())
         msg_cls = message_handlers[message.routing_key]["message_class"](payload=msg_raw["payload"])
         msg_cls.headers = msg_raw["headers"]

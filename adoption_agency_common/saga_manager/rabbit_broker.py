@@ -4,10 +4,14 @@ import os
 from typing import Any, Awaitable, Callable, List, Optional, Union
 import aio_pika
 
+from adoption_agency_common.util import consts
 
 class RabbitMQClient:
     _instance: Optional["RabbitMQClient"] = None
     _lock: asyncio.Lock = asyncio.Lock()
+
+    def __init__(self):
+        self.callback_queue = None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -84,16 +88,15 @@ class RabbitMQClient:
         """Starts consuming from queues with an async callback."""
         await self.sub_channel.set_qos(prefetch_count=1)
 
+        async def message_handler(message: aio_pika.IncomingMessage):
+            async with message.process():
+                await callback(message)
+        await self.generate_callback_queue()
+        await self.callback_queue.consume(message_handler)
         for q_name in queue_names:
             queue = await self.sub_channel.declare_queue(q_name, passive=True)
 
-            # Define wrapper to handle automatic message processing/acknowledgment
-            async def message_handler(message: aio_pika.IncomingMessage):
-                async with message.process():  # Auto-acknowledges on successful return
-                    await callback(message)
-
             await queue.consume(message_handler)
-
         print(f"[*] Async consumer listening on: {queue_names}")
 
     async def generate_callback_queue(self) -> str:
@@ -102,4 +105,6 @@ class RabbitMQClient:
             exclusive=True,
             auto_delete=True,
         )
+        self.callback_queue = queue
+        consts.service_callback_queue = queue.name
         return queue.name

@@ -5,12 +5,12 @@ from adoption_agency_common.util import correlation_guid
 
 class BaseMessage:
 
-    def __init__(self, payload=None):
+    def __init__(self, payload=None, existing_message: 'BaseMessage' = None):
         if payload is None:
             payload = {}
         self._guid = correlation_guid.get()
         self.payload = payload
-        self.headers = {}
+        self.headers = existing_message.headers if existing_message else {}
 
     @property
     def guid(self):
