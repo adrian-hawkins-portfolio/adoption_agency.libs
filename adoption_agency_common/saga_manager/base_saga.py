@@ -1,7 +1,9 @@
 import asyncio
 import json
 from asyncio import Future
-from typing import Dict
+from typing import Dict, Optional
+
+from pydantic import BaseModel
 
 from adoption_agency_common.saga_manager.base_message import BaseMessage
 from adoption_agency_common.saga_manager.rabbit_broker import RabbitMQClient
@@ -14,34 +16,28 @@ class SagaBase:
         self.broker = RabbitMQClient()
 
     async def send_message(self, message: BaseMessage):
-        queue_name = routing_key = message.headers.get("callback_queue", message.get_message_name(message.__class__))
-        message.headers.pop("callback_queue", None)
-        if not message.headers.get("guid"):
-            message.headers["guid"] = correlation_guid.get()
-        body = json.dumps({
-            "payload": message.payload,
-            "headers": message.headers
-        })
+        queue_name = routing_key = message.headers.callback_queue or message.get_message_name(message.__class__)
+        message.headers.callback_queue = None
+        message.headers.guid = message.headers.guid or correlation_guid.get()
+        body = message.model_dump_json()
         await self.broker.publish(queue_name, body, routing_key)
 
 
     async def send_response(self, message: BaseMessage):
-        fut = pending_futures.get(message.headers["guid"])
+        fut = pending_futures.get(message.headers.guid)
         if fut:
-            fut.set_result(message.payload)
+            fut.set_result(message.model_dump())
 
-    async def send_message_and_respond(self, message: BaseMessage):
-        message.headers["callback_queue"] = consts.service_callback_queue
+    async def send_message_and_respond(self, message: BaseMessage, result_model: Optional[type[BaseModel]] = None):
+        message.headers.callback_queue = consts.service_callback_queue
         loop = asyncio.get_running_loop()
         future = loop.create_future()
         pending_futures[correlation_guid.get()] = future
         queue_name = routing_key = message.get_message_name(message.__class__)
 
-        body = json.dumps({
-            "payload": message.payload,
-            "headers": message.headers
-        })
+        body = message.model_dump_json()
         await self.broker.publish(queue_name, body, routing_key)
-        message.headers.pop("callback_queue", None)
+        message.headers.callback_queue = None
 
-        return await future
+        res =  await future
+        return result_model.model_validate(res) if result_model else res

@@ -4,7 +4,7 @@ import os
 from typing import Any, Awaitable, Callable, List, Optional, Union
 import aio_pika
 
-from adoption_agency_common.util import consts
+from adoption_agency_common.util import consts, logger
 
 class RabbitMQClient:
     _instance: Optional["RabbitMQClient"] = None
@@ -97,7 +97,7 @@ class RabbitMQClient:
             queue = await self.sub_channel.declare_queue(q_name, passive=True)
 
             await queue.consume(message_handler)
-        print(f"[*] Async consumer listening on: {queue_names}")
+        logger.debug(f"Rabbit consumer listening on: {queue_names}")
 
     async def generate_callback_queue(self) -> str:
         queue = await self.sub_channel.declare_queue(

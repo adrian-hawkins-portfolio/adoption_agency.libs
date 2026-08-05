@@ -1,20 +1,16 @@
-from typing import Any
+from typing import Any, Optional
+
+from pydantic import BaseModel, Field
 
 from adoption_agency_common.util import correlation_guid
 
 
-class BaseMessage:
+class MessageHeaders(BaseModel):
+    guid: Optional[str] = None
+    callback_queue: Optional[str] = None
 
-    def __init__(self, payload=None, existing_message: 'BaseMessage' = None):
-        if payload is None:
-            payload = {}
-        self._guid = correlation_guid.get()
-        self.payload = payload
-        self.headers = existing_message.headers if existing_message else {}
-
-    @property
-    def guid(self):
-        return correlation_guid
+class BaseMessage(BaseModel):
+    headers: MessageHeaders = Field(default_factory=MessageHeaders)
 
     @staticmethod
     def get_message_name(cls) -> str:

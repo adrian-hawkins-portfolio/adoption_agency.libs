@@ -6,7 +6,7 @@ import aio_pika
 
 from adoption_agency_common.saga_manager.base_saga import pending_futures
 from adoption_agency_common.saga_manager.rabbit_broker import RabbitMQClient
-from adoption_agency_common.util import correlation_guid, consts
+from adoption_agency_common.util import correlation_guid, consts,logger
 from adoption_agency_common.util.consts import service_callback_queue
 
 message_handlers = {}
@@ -19,33 +19,27 @@ class SagaNode:
     async def initialise(self):
         await self.broker.initialize(quorum_queues=[str(x) for x in message_handlers.keys()])
         await self.broker.start_consuming([str(x) for x in message_handlers.keys()], self.process_message)
-        # self.declare_input_queues()
 
-    # def declare_input_queues(self):
-    #     queues = [str(x) for x in message_handlers.keys()]
-    #     self.broker.declare_quorum_queues(queues)
-    #     self.broker.start_consuming(queues, self.process_message)
 
     def start_node(self):
         pass
 
     async def process_message(self, message: aio_pika.IncomingMessage) -> None:
-        # await asyncio.sleep(1)
-        print(message.routing_key)
+        logger.debug(f"Received {message.routing_key}")
         if message.routing_key == consts.service_callback_queue:
             guid = json.loads(message.body.decode())["headers"]["guid"]
             fut = pending_futures.get(guid)
             if fut:
-                fut.set_result(json.loads(message.body.decode())["payload"])
+                fut.set_result(json.loads(message.body.decode()))
             return
-        msg_raw = json.loads(message.body.decode())
-        msg_cls = message_handlers[message.routing_key]["message_class"](payload=msg_raw["payload"])
-        msg_cls.headers = msg_raw["headers"]
-        correlation_guid.set(msg_raw["headers"]["guid"])
+
+        msg_cls = message_handlers[message.routing_key]["message_class"].model_validate_json(message.body.decode())
+
         handler_cls = message_handlers[message.routing_key]["cls"]()
         method = getattr(handler_cls, message_handlers[message.routing_key]["method"])
+        correlation_guid.set(msg_cls.headers.guid)
         if message_handlers[message.routing_key]["is_async"]:
             await method(msg_cls)
         else:
             method(msg_cls)
-        print(f" Received async message: {message.body.decode()}")
+        logger.debug(f"Received async message: {message.body.decode()}")
